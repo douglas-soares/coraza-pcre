@@ -21,7 +21,6 @@ import (
 	"github.com/corazawaf/coraza/v3"
 	"github.com/corazawaf/coraza/v3/operators"
 	"github.com/gijsbers/go-pcre"
-	"go.uber.org/zap"
 )
 
 type rx struct {
@@ -56,18 +55,21 @@ func (o *rx) Evaluate(tx *coraza.Transaction, value string) bool {
 		var err error
 		o.re, err = pcre.Compile(strings.Replace(o.data, o.macro.String(), o.macro.Expand(tx), -1), pcre.DOTALL|pcre.DOLLAR_ENDONLY)
 		if err != nil {
-			tx.WAF.Logger.Error("@rx operator compile macro data error", zap.Error(err))
+			tx.WAF.Logger.Error("@rx operator compile macro data error", err)
 			return false
 		}
 		o.compiled = true
+
 	}
 
 	m := o.re.MatcherString(value, 0)
-	for i := 0; i < m.Groups()+1; i++ {
-		if i == 10 {
-			return true
+	if tx.Capture {
+		for i := 0; i < m.Groups()+1; i++ {
+			if i == 10 {
+				return true
+			}
+			tx.CaptureField(i, m.GroupString(i))
 		}
-		tx.CaptureField(i, m.GroupString(i))
 	}
 	return m.Matches()
 }
