@@ -1,4 +1,4 @@
-module github.com/jptosso/coraza-pcre
+module github.com/douglas-soares/coraza-pcre
 
 go 1.17
 
